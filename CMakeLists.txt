@@ -21,7 +21,8 @@ message(STATUS "Installing fmt via submodules")
 add_subdirectory(external/fmt)
 
 
-add_executable(shaderedit src/main.cpp)
+add_executable(shaderedit src/main.cpp src/window.cpp src/app.cpp src/assets.cpp
+    src/resource_manager.cpp src/vulkan_device.cpp src/pipeline.cpp)
 
 include_directories("${Vulkan_INCLUDE_DIR}")
 target_link_libraries(shaderedit glfw fmt ${Vulkan_LIBRARIES})
