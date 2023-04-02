@@ -18,6 +18,7 @@ public:
 
     auto shouldClose() -> bool;
     auto pollEvents() -> void;
+    auto getExtent() -> VkExtent2D;
 
     auto createWindowSurface(VkInstance instance, VkSurfaceKHR* surface) -> void;
 

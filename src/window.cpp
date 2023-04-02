@@ -34,6 +34,11 @@ auto Window::pollEvents() -> void
     glfwPollEvents();
 }
 
+auto Window::getExtent() -> VkExtent2D
+{
+    return {static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height)};
+}
+
 auto Window::createWindowSurface(VkInstance instance, VkSurfaceKHR* surface) -> void
 {
     if (glfwCreateWindowSurface(instance, m_glfwWindow, nullptr, surface) != VK_SUCCESS)

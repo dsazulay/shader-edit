@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <filesystem>
+#include <vector>
 
 class Shader
 {
@@ -12,6 +13,11 @@ public:
     auto setUniformBlock(std::string_view blockName, int blockID) -> void;
     auto setInt(std::string_view name, int value) const -> void;
     auto setVec2(std::string_view name, float x, float y) const -> void;
+    auto getVertCode() -> std::vector<char>&;
+    auto getFragCode() -> std::vector<char>&;
+
+    std::vector<char> m_vertCode;
+    std::vector<char> m_fragCode;
 
     std::string vertFilePath;
     std::string fragFilePath;

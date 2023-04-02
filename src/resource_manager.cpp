@@ -25,20 +25,17 @@ auto ResourceManager::loadShader(std::string_view vertShaderFile, std::string_vi
         shaders[name].fragLastWriteTime = std::filesystem::last_write_time(fragShaderFile);
     }
     else
-    {
-        Shader shader{};
-        shader.compile(vertexCode.c_str(), fragCode.c_str());
-        shader.vertFilePath = vertShaderFile;
-        shader.fragFilePath = fragShaderFile;
-        shader.vertLastWriteTime = std::filesystem::last_write_time(vertShaderFile);
-        shader.fragLastWriteTime = std::filesystem::last_write_time(fragShaderFile);
-        shaders[name] = shader;
-    }
-
+    {}*/
+    Shader shader{};
+    shader.m_vertCode = vertCode;
+    shader.m_fragCode = fragCode;
+    shader.vertFilePath = vertShaderFile;
+    shader.fragFilePath = fragShaderFile;
+    shader.vertLastWriteTime = std::filesystem::last_write_time(vertShaderFile);
+    shader.fragLastWriteTime = std::filesystem::last_write_time(fragShaderFile);
+    shaders[std::string(name)] = shader;
     
-    return &shaders[name];
-    */
-    return nullptr;
+    return &shaders[std::string(name)];
 }
 
 auto ResourceManager::recompileShaders() -> void
