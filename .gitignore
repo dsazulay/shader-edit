@@ -7,3 +7,5 @@
 # c++ build locations
 build/
 
+# compiled shaders
+*.spv
