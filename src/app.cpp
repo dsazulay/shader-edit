@@ -2,7 +2,7 @@
 #include "resource_manager.h"
 #include "vulkan/vulkan_core.h"
 
-#include <_types/_uint32_t.h>
+#include <cstddef>
 #include <stdexcept>
 #include <array>
 
@@ -47,7 +47,8 @@ auto App::createPipelineLayout() -> void
 auto App::createPipeline() -> void
 {
     Shader* shader = ResourceManager::loadShader("../resources/unlit.vert.spv", "../resources/unlit.frag.spv", "Unlit");
-    auto pipelineConfig = Pipeline::defaultPipelineConfigInfo(m_swapChain.width(), m_swapChain.height());
+    PipelineConfigInfo pipelineConfig{};
+    Pipeline::defaultPipelineConfigInfo(pipelineConfig, m_swapChain.width(), m_swapChain.height());
     pipelineConfig.renderPass = m_swapChain.getRenderPass();
     pipelineConfig.pipelineLayout = m_pipelineLayout;
     m_pipeline = std::make_unique<Pipeline>(m_device, pipelineConfig, shader->m_vertCode, shader->m_fragCode);

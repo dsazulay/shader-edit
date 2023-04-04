@@ -4,6 +4,7 @@
 #include <cstring>
 #include <set>
 #include <unordered_set>
+#include <stdexcept>
 
 // local callback functions
 static VKAPI_ATTR auto VKAPI_CALL debugCallback(

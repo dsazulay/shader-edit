@@ -1,6 +1,7 @@
 #include "pipeline.h"
 #include "vulkan/vulkan_core.h"
 #include <vector>
+#include <stdexcept>
 
 Pipeline::Pipeline(VulkanDevice& device, const PipelineConfigInfo& configInfo, std::vector<char>& vertCode, std::vector<char>& fragCode) : m_device(device)
 {
@@ -14,9 +15,8 @@ Pipeline::~Pipeline()
     vkDestroyPipeline(m_device.device(), m_graphicsPipeline, nullptr);
 }
 
-auto Pipeline::defaultPipelineConfigInfo(uint32_t width, uint32_t height) -> PipelineConfigInfo
+auto Pipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo, uint32_t width, uint32_t height) -> PipelineConfigInfo
 {
-    PipelineConfigInfo configInfo{};
     configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
