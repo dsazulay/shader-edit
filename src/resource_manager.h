@@ -10,7 +10,7 @@
 class ResourceManager
 {
 public:
-    static auto loadShader(std::string_view vertShaderFile, std::string_view fragShaderFile, std::string_view name) -> Shader*;
+    static auto loadShader(std::string_view vertShaderFile, std::string_view fragShaderFile, std::string_view name, bool isCompiled) -> Shader*;
     static auto recompileShaders() -> void;
 
     static std::unordered_map<std::string, Shader> shaders;

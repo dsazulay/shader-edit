@@ -9,6 +9,21 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Vulkan
 find_package(Vulkan REQUIRED)
 
+set(GLSLANGLIBS /usr/local/lib/ CACHE PATH "glslang library directory")
+link_directories(${GLSLANGLIBS})
+set(GLSLANGLIBS
+    glslang
+    HLSL
+    OSDependent
+    OGLCompiler
+    SPIRV
+    glslang-default-resource-limits
+    SPVRemapper SPIRV-Tools SPIRV-Tools-opt
+    MachineIndependent
+    GenericCodeGen
+    shaderc
+    shaderc_util)
+
 # GLFW
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "GLFW lib only" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "GLFW lib only" FORCE)
@@ -53,7 +68,7 @@ add_executable(shaderedit src/main.cpp src/window.cpp src/app.cpp src/assets.cpp
     src/resource_manager.cpp src/vulkan_device.cpp src/pipeline.cpp src/swap_chain.cpp ${SPIRV_BINARY_FILES})
 
 include_directories("${Vulkan_INCLUDE_DIR}")
-target_link_libraries(shaderedit glfw fmt ${Vulkan_LIBRARIES})
+target_link_libraries(shaderedit glfw fmt ${Vulkan_LIBRARIES} ${GLSLANGLIBS})
 
 target_compile_options(shaderedit PRIVATE -Wall -Wextra)
 
