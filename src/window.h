@@ -19,14 +19,21 @@ public:
     auto shouldClose() -> bool;
     auto pollEvents() -> void;
     auto getExtent() -> VkExtent2D;
+    auto wasWindowResized() -> bool;
+    auto resetWindowResizedFlag() -> void;
 
     auto createWindowSurface(VkInstance instance, VkSurfaceKHR* surface) -> void;
 
+    static bool recompileShader;
+
 private:
     auto init() -> void;
+    static auto keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods) -> void;
+    static auto framebufferResizeCallback(GLFWwindow* window, int width, int height) -> void;
 
     GLFWwindow* m_glfwWindow{};
     int m_width;
     int m_height;
+    bool m_framebufferResized = false;
     std::string m_name;
 };

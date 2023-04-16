@@ -38,7 +38,7 @@ public:
     ~VulkanDevice();
     VulkanDevice(const VulkanDevice& other) = delete;
     VulkanDevice(VulkanDevice&& other) = delete;
-    auto operator=(const VulkanDevice& other) -> void = delete;
+    auto operator=(const VulkanDevice& other) -> VulkanDevice& = delete;
     auto operator=(VulkanDevice&& other) -> VulkanDevice& = delete;
 
     auto getCommandPool() -> VkCommandPool { return commandPool; }

@@ -23,11 +23,14 @@ private:
     auto createPipelineLayout() -> void;
     auto createPipeline() -> void;
     auto createCommandBuffers() -> void;
+    auto freeCommandBuffers() -> void;
     auto drawFrame() -> void;
+    auto recreateSwapChain() -> void;
+    auto recordCommandBuffer(int imageIndex) -> void;
 
     Window m_window{WIDTH, HEIGHT, "Shader Edit"};
     VulkanDevice m_device{m_window};
-    SwapChain m_swapChain{m_device, m_window.getExtent()};
+    std::unique_ptr<SwapChain> m_swapChain;
     std::unique_ptr<Pipeline> m_pipeline;
     VkPipelineLayout m_pipelineLayout;
     std::vector<VkCommandBuffer> m_commandBuffers;
