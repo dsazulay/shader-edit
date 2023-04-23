@@ -56,6 +56,8 @@ auto App::createPipeline() -> void
 {
     //Shader* shader = ResourceManager::loadShader("../resources/unlit.vert.spv", "../resources/unlit.frag.spv", "Unlit", true);
     Shader* shader = ResourceManager::loadShader("../resources/unlit.vert", "../resources/unlit.frag", "Unlit", false);
+    if (shader == nullptr)
+        return;
     PipelineConfigInfo pipelineConfig{};
     Pipeline::defaultPipelineConfigInfo(pipelineConfig);
     pipelineConfig.renderPass = m_swapChain->getRenderPass();

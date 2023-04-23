@@ -53,7 +53,7 @@ auto compileFile(const std::string& source_name, shaderc_shader_kind kind, const
     if (module.GetCompilationStatus() != shaderc_compilation_status_success)
     {
         fmt::print("Shader compile fail: {}\n", module.GetErrorMessage());
-        return std::vector<uint32_t>();
+        return {};
     }
 
     return {module.cbegin(), module.cend()};
@@ -96,9 +96,13 @@ auto ResourceManager::loadShader(std::string_view vertShaderFile, std::string_vi
        
         auto vertCompiled = compileFile(vertShaderFile.data(), shaderc_glsl_vertex_shader, vertexCode.c_str());
         fmt::print("Compiled to a binary module with {} words.\n", vertCompiled.size());
+        if (vertCompiled.size() == 0)
+            return nullptr;
 
         auto fragCompiled = compileFile(fragShaderFile.data(), shaderc_glsl_fragment_shader, fragmentCode.c_str());
         fmt::print("Compiled to a binary module with {} words.\n", fragCompiled.size());
+        if (fragCompiled.size() == 0)
+            return nullptr;
 
         vertCode.reserve(vertCompiled.size() * 4);
         for (auto i : vertCompiled)
