@@ -64,7 +64,7 @@ add_custom_target(
     DEPENDS ${SPIRV_BINARY_FILES}
 )
 
-add_executable(shaderedit src/main.cpp src/window.cpp src/app.cpp src/assets.cpp
+add_executable(shaderedit src/main.cpp src/window.cpp src/app.cpp src/assets.cpp src/model.cpp
     src/resource_manager.cpp src/vulkan_device.cpp src/pipeline.cpp src/swap_chain.cpp ${SPIRV_BINARY_FILES})
 
 include_directories("${Vulkan_INCLUDE_DIR}")

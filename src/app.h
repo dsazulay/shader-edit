@@ -4,6 +4,7 @@
 #include "vulkan_device.h"
 #include "pipeline.h"
 #include "swap_chain.h"
+#include "model.h"
 
 #include <memory>
 #include <vector>
@@ -20,6 +21,7 @@ public:
     auto run() -> void;
 
 private:
+    auto loadModel() -> void;
     auto createPipelineLayout() -> void;
     auto createPipeline() -> void;
     auto createCommandBuffers() -> void;
@@ -34,6 +36,8 @@ private:
     std::unique_ptr<Pipeline> m_pipeline;
     VkPipelineLayout m_pipelineLayout;
     std::vector<VkCommandBuffer> m_commandBuffers;
+
+    std::unique_ptr<Model> m_model;
 
     static constexpr int WIDTH = 960;
     static constexpr int HEIGHT = 540;

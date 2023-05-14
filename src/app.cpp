@@ -9,6 +9,7 @@
 
 App::App()
 {
+    loadModel();
     createPipelineLayout();
     recreateSwapChain();
     createCommandBuffers();
@@ -35,6 +36,21 @@ auto App::run() -> void
     }
 
     vkDeviceWaitIdle(m_device.device());
+}
+
+auto App::loadModel() -> void
+{
+    std::vector<Model::Vertex> vertices
+    {
+        {{-1.0, -1.0}, {0.0, 1.0}},
+        {{1.0, 1.0}, {1.0, 0.0}},
+        {{-1.0, 1.0}, {0.0, 0.0}},
+        {{-1.0, -1.0}, {0.0, 1.0}},
+        {{1.0, -1.0}, {1.0, 1.0}},
+        {{1.0, 1.0}, {1.0, 0.0}},
+    };
+
+    m_model = std::make_unique<Model>(m_device, vertices);
 }
 
 auto App::createPipelineLayout() -> void
@@ -181,7 +197,9 @@ auto App::recordCommandBuffer(int imageIndex) -> void
     vkCmdSetScissor(m_commandBuffers[imageIndex], 0, 1, &scissor);
 
     m_pipeline->bind(m_commandBuffers[imageIndex]);
-    vkCmdDraw(m_commandBuffers[imageIndex], 6, 1, 0, 0);
+
+    m_model->bind(m_commandBuffers[imageIndex]);
+    m_model->draw(m_commandBuffers[imageIndex]);
 
     vkCmdEndRenderPass(m_commandBuffers[imageIndex]);
 
