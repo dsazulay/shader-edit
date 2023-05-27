@@ -2,17 +2,20 @@
 
 #include "vulkan_device.h"
 
+#include <OpenGL/OpenGL.h>
 #include <vector>
 
 class Model
 {
 public:
-    struct Vector2 {
+    struct Vector2
+    {
         float x;
         float y;
     };
 
-    struct Vertex {
+    struct Vertex
+    {
         Vector2 position;
         Vector2 texCoord;
 

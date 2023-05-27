@@ -7,6 +7,11 @@
 #include <stdexcept>
 #include <array>
 
+struct PushConstantData
+{
+    float time;
+};
+
 App::App()
 {
     loadModel();
@@ -55,12 +60,17 @@ auto App::loadModel() -> void
 
 auto App::createPipelineLayout() -> void
 {
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(PushConstantData);
+
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 0; // Optional
     pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
-    pipelineLayoutInfo.pushConstantRangeCount = 0; // Optionala
-    pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+    pipelineLayoutInfo.pushConstantRangeCount = 1; // Optionala
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange; // Optional
 
     if (vkCreatePipelineLayout(m_device.device(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) 
     {
@@ -199,6 +209,12 @@ auto App::recordCommandBuffer(int imageIndex) -> void
     m_pipeline->bind(m_commandBuffers[imageIndex]);
 
     m_model->bind(m_commandBuffers[imageIndex]);
+
+    PushConstantData pushConstantData{};
+    pushConstantData.time = static_cast<float>(glfwGetTime());
+    vkCmdPushConstants(m_commandBuffers[imageIndex], m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
+            0, sizeof(PushConstantData), &pushConstantData);
+
     m_model->draw(m_commandBuffers[imageIndex]);
 
     vkCmdEndRenderPass(m_commandBuffers[imageIndex]);
