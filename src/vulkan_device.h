@@ -71,6 +71,7 @@ public:
             VkMemoryPropertyFlags properties,
             VkImage &image,
             VkDeviceMemory &imageMemory) -> void;
+    auto transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) -> void;
 
     VkPhysicalDeviceProperties properties;
 

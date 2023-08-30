@@ -2,7 +2,6 @@
 
 #include "vulkan_device.h"
 
-#include <OpenGL/OpenGL.h>
 #include <vector>
 
 class Model
