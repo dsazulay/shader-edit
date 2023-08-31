@@ -1,5 +1,8 @@
 #pragma once
 
+#include "vulkan_device.h"
+
+#include "vulkan/vulkan_core.h"
 #include <string>
 #include <string_view>
 #include <filesystem>
@@ -28,4 +31,23 @@ private:
     unsigned int ID;
 
     constexpr static int logBufferSize = 512;
+};
+
+class Texture
+{
+public:
+    auto load(std::string_view path, VkFormat format, VulkanDevice& device) -> void;
+    auto free(VulkanDevice& device) -> void;
+    auto imageView() -> VkImageView;
+    auto sampler() -> VkSampler;
+
+private:
+    auto createImage(unsigned char* pPixels, VkImageCreateInfo imageInfo, VkDeviceSize imageSize, VulkanDevice& device) -> void;
+    auto createImageView(VkFormat format, VulkanDevice& device) -> void;
+    auto createSampler(VulkanDevice& device) -> void;
+
+    VkImage m_image;
+    VkDeviceMemory m_imageMemory;
+    VkImageView m_imageView;
+    VkSampler m_sampler;
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "assets.h"
 #include "window.h"
 #include "vulkan_device.h"
 #include "pipeline.h"
@@ -32,8 +33,6 @@ private:
     auto recordCommandBuffer(int imageIndex) -> void;
 
     auto createImageTexture(std::string_view path) -> void;
-    auto createTextureImageView() -> void;
-    auto createTextureSampler() -> void;
     auto createDescriptorSetLayout() -> void;
     auto createDescriptorSets() -> void;
     auto createDescriptorPool() -> void;
@@ -44,13 +43,11 @@ private:
     std::unique_ptr<Pipeline> m_pipeline;
     VkPipelineLayout m_pipelineLayout;
     std::vector<VkCommandBuffer> m_commandBuffers;
-    VkImage m_textureImage;
-    VkDeviceMemory m_textureImageMemory;
-    VkImageView m_imageView;
-    VkSampler m_sampler;
     VkDescriptorSetLayout m_descriptorSetLayout;
     std::vector<VkDescriptorSet> m_descriptorSets;
     VkDescriptorPool m_descriptorPool;
+    Texture primaryTex;
+    Texture secondaryTex;
 
     std::unique_ptr<Model> m_model;
 

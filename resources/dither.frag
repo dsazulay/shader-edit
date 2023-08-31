@@ -9,6 +9,7 @@ layout(push_constant) uniform PushData {
 };
 
 layout(binding = 0) uniform sampler2D mainTex; 
+layout(binding = 1) uniform sampler2D noiseTex;
 
 float hash21(vec2 p)
 {
@@ -19,7 +20,9 @@ float hash21(vec2 p)
 
 void main()
 {
-    float noise = hash21(uv);
+    //float noise = hash21(uv);
+    float noise = texture(noiseTex, uv * 10).r;
+    //float noise = 0.5;
 
     float SHADES = 4.0;
     vec4 tex = texture(mainTex, uv);
