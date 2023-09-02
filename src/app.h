@@ -32,6 +32,8 @@ private:
     auto recreateSwapChain() -> void;
     auto recordCommandBuffer(int imageIndex) -> void;
 
+    auto saveFrameAsImage() -> void;
+
     auto createImageTexture(std::string_view path) -> void;
     auto createDescriptorSetLayout() -> void;
     auto createDescriptorSets() -> void;

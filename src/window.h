@@ -25,6 +25,7 @@ public:
     auto createWindowSurface(VkInstance instance, VkSurfaceKHR* surface) -> void;
 
     static bool recompileShader;
+    static bool saveImage;
 
 private:
     auto init() -> void;

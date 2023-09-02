@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <fstream>
 #include <array>
 
 #include <fmt/core.h>
@@ -49,6 +50,12 @@ auto App::run() -> void
             createPipeline();
         }
         drawFrame();
+
+        if (m_window.saveImage)
+        {
+            saveFrameAsImage();
+            Window::saveImage = false;
+        }
     }
 
     vkDeviceWaitIdle(m_device.device());
@@ -92,7 +99,7 @@ auto App::createPipelineLayout() -> void
 auto App::createPipeline() -> void
 {
     //Shader* shader = ResourceManager::loadShader("../resources/unlit.vert.spv", "../resources/unlit.frag.spv", "Unlit", true);
-    Shader* shader = ResourceManager::loadShader("../resources/unlit.vert", "../resources/dither.frag", "Unlit", false);
+    Shader* shader = ResourceManager::loadShader("../resources/unlit.vert", "../resources/cairo.frag", "Unlit", false);
     if (shader == nullptr)
         return;
     PipelineConfigInfo pipelineConfig{};
@@ -342,4 +349,179 @@ auto App::createDescriptorPool() -> void
         throw std::runtime_error("failed to create descriptor pool!");
     }
 }
-    
+
+auto App::saveFrameAsImage() -> void
+{
+    const char* imagedata;
+
+    // Create the linear tiled destination image to copy to and to read the memory from
+    VkImageCreateInfo imgCreateInfo{};
+    imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imgCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+    imgCreateInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+    imgCreateInfo.extent.width = WIDTH;
+    imgCreateInfo.extent.height = HEIGHT;
+    imgCreateInfo.extent.depth = 1;
+    imgCreateInfo.arrayLayers = 1;
+    imgCreateInfo.mipLevels = 1;
+    imgCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imgCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imgCreateInfo.tiling = VK_IMAGE_TILING_LINEAR;
+    imgCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    // Create the image
+    VkImage dstImage;
+
+    if (vkCreateImage(m_device.device(), &imgCreateInfo, nullptr, &dstImage) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed");
+    }
+    // Create memory to back up the image
+    VkMemoryRequirements memRequirements;
+    VkMemoryAllocateInfo memAllocInfo{};
+    memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    VkDeviceMemory dstImageMemory;
+    vkGetImageMemoryRequirements(m_device.device(), dstImage, &memRequirements);
+    memAllocInfo.allocationSize = memRequirements.size;
+    // Memory must be host visible to copy from
+    memAllocInfo.memoryTypeIndex = m_device.findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    if (vkAllocateMemory(m_device.device(), &memAllocInfo, nullptr, &dstImageMemory) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed allocate");
+    }
+    if (vkBindImageMemory(m_device.device(), dstImage, dstImageMemory, 0) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed bind");
+    }
+
+    // Do the actual blit from the offscreen image to our host visible destination image
+    //VkCommandBufferAllocateInfo cmdBufAllocateInfo = vks::initializers::commandBufferAllocateInfo(commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+    //VkCommandBuffer copyCmd;
+    //vkAllocateCommandBuffers(m_device.device(), &cmdBufAllocateInfo, &copyCmd));
+    //VkCommandBufferBeginInfo cmdBufInfo = vks::initializers::commandBufferBeginInfo();
+    //vkBeginCommandBuffer(copyCmd, &cmdBufInfo);
+
+    VkCommandBuffer copyCmd = m_device.beginSingleTimeCommands();
+
+    VkImageMemoryBarrier imageMemoryBarrier{};
+    imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    imageMemoryBarrier.srcAccessMask = 0;
+    imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    imageMemoryBarrier.image = dstImage;
+    imageMemoryBarrier.subresourceRange = VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+    vkCmdPipelineBarrier(
+            copyCmd,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &imageMemoryBarrier);
+
+    // colorAttachment.image is already in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, and does not need to be transitioned
+    imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    imageMemoryBarrier.srcAccessMask = 0;
+    imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    imageMemoryBarrier.image = m_swapChain->getImage(0);
+    imageMemoryBarrier.subresourceRange = VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+    vkCmdPipelineBarrier(
+            copyCmd,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &imageMemoryBarrier);
+
+    VkImageCopy imageCopyRegion{};
+    imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageCopyRegion.srcSubresource.layerCount = 1;
+    imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imageCopyRegion.dstSubresource.layerCount = 1;
+    imageCopyRegion.extent.width = WIDTH;
+    imageCopyRegion.extent.height = HEIGHT;
+    imageCopyRegion.extent.depth = 1;
+
+    vkCmdCopyImage(
+            copyCmd,
+            m_swapChain->getImage(0), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &imageCopyRegion);
+
+    // Transition destination image to general layout, which is the required layout for mapping the image memory later on
+    imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imageMemoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+    imageMemoryBarrier.image = dstImage;
+    imageMemoryBarrier.subresourceRange = VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+
+    vkCmdPipelineBarrier(
+            copyCmd,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &imageMemoryBarrier);
+
+
+    // TODO: check if need to transition swap chain image layout back to present src
+
+    m_device.endSingleTimeCommands(copyCmd);
+
+
+    // Get layout of the image (including row pitch)
+    VkImageSubresource subResource{};
+    subResource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    VkSubresourceLayout subResourceLayout;
+
+    vkGetImageSubresourceLayout(m_device.device(), dstImage, &subResource, &subResourceLayout);
+
+    // Map image memory so we can start copying from it
+    vkMapMemory(m_device.device(), dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
+    imagedata += subResourceLayout.offset;
+
+    /*
+       Save host visible framebuffer image to disk (ppm format)
+    */
+
+    const char* filename = "headless.ppm";
+    std::ofstream file(filename, std::ios::out | std::ios::binary);
+
+    // ppm header
+    file << "P6\n" << WIDTH << "\n" << HEIGHT << "\n" << 255 << "\n";
+
+    // ppm binary pixel data
+    for (int32_t y = 0; y < HEIGHT; y++) {
+        unsigned int *row = (unsigned int*)imagedata;
+        for (int32_t x = 0; x < WIDTH; x++) {
+            file.write((char*)row + 2, 1);
+            file.write((char*)row + 1, 1);
+            file.write((char*)row, 1);
+            row++;
+        }
+        imagedata += subResourceLayout.rowPitch;
+    }
+    file.close();
+
+    //LOG("Framebuffer image saved to %s\n", filename);
+
+    // Clean up resources
+    vkUnmapMemory(m_device.device(), dstImageMemory);
+    vkFreeMemory(m_device.device(), dstImageMemory, nullptr);
+    vkDestroyImage(m_device.device(), dstImage, nullptr);
+}

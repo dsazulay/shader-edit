@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 bool Window::recompileShader = false;
+bool Window::saveImage = false;
 
 Window::Window(int width, int height, std::string_view name)
     : m_width{width}, m_height{height}, m_name{name}
@@ -75,6 +76,11 @@ auto Window::keyboardCallback(GLFWwindow* window, int key, int scancode, int act
     else if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
         recompileShader = true;
+    }
+
+    else if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    {
+        saveImage = true;
     }
 }
 

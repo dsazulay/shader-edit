@@ -29,6 +29,7 @@ public:
     auto getSwapChainExtent() -> VkExtent2D { return swapChainExtent; }
     auto width() -> uint32_t { return swapChainExtent.width; }
     auto height() -> uint32_t { return swapChainExtent.height; }
+    auto getImage(int index) -> VkImage { return swapChainImages[index]; }
 
     auto extentAspectRatio() -> float
     {
