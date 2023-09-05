@@ -10,6 +10,9 @@
 
 #include <fmt/core.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 struct PushConstantData
 {
     float time;
@@ -352,15 +355,15 @@ auto App::createDescriptorPool() -> void
 
 auto App::saveFrameAsImage() -> void
 {
-    const char* imagedata;
+    char* imagedata;
 
     // Create the linear tiled destination image to copy to and to read the memory from
     VkImageCreateInfo imgCreateInfo{};
     imgCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imgCreateInfo.imageType = VK_IMAGE_TYPE_2D;
     imgCreateInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
-    imgCreateInfo.extent.width = WIDTH;
-    imgCreateInfo.extent.height = HEIGHT;
+    imgCreateInfo.extent.width = m_swapChain->getSwapChainExtent().width;
+    imgCreateInfo.extent.height = m_swapChain->getSwapChainExtent().height;
     imgCreateInfo.extent.depth = 1;
     imgCreateInfo.arrayLayers = 1;
     imgCreateInfo.mipLevels = 1;
@@ -447,8 +450,8 @@ auto App::saveFrameAsImage() -> void
     imageCopyRegion.srcSubresource.layerCount = 1;
     imageCopyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     imageCopyRegion.dstSubresource.layerCount = 1;
-    imageCopyRegion.extent.width = WIDTH;
-    imageCopyRegion.extent.height = HEIGHT;
+    imageCopyRegion.extent.width = m_swapChain->getSwapChainExtent().width;
+    imageCopyRegion.extent.height = m_swapChain->getSwapChainExtent().height;
     imageCopyRegion.extent.depth = 1;
 
     vkCmdCopyImage(
@@ -493,22 +496,26 @@ auto App::saveFrameAsImage() -> void
 
     // Map image memory so we can start copying from it
     vkMapMemory(m_device.device(), dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
+    char* imagepointer;
+    imagepointer = imagedata += subResourceLayout.offset;
     imagedata += subResourceLayout.offset;
 
     /*
        Save host visible framebuffer image to disk (ppm format)
     */
 
+    int width = m_swapChain->getSwapChainExtent().width;
+    int height = m_swapChain->getSwapChainExtent().height;
     const char* filename = "headless.ppm";
     std::ofstream file(filename, std::ios::out | std::ios::binary);
 
     // ppm header
-    file << "P6\n" << WIDTH << "\n" << HEIGHT << "\n" << 255 << "\n";
+    file << "P6\n" << width << "\n" << height << "\n" << 255 << "\n";
 
     // ppm binary pixel data
-    for (int32_t y = 0; y < HEIGHT; y++) {
+    for (int32_t y = 0; y < height; y++) {
         unsigned int *row = (unsigned int*)imagedata;
-        for (int32_t x = 0; x < WIDTH; x++) {
+        for (int32_t x = 0; x < width; x++) {
             file.write((char*)row + 2, 1);
             file.write((char*)row + 1, 1);
             file.write((char*)row, 1);
@@ -517,6 +524,19 @@ auto App::saveFrameAsImage() -> void
         imagedata += subResourceLayout.rowPitch;
     }
     file.close();
+
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            char temp = imagepointer[y * width * 4 + x * 4];
+            imagepointer[y * width * 4 + x * 4] = imagepointer[y * width * 4 + x * 4 + 2];
+            imagepointer[y * width * 4 + x * 4 + 2] = temp;
+        }
+    }
+
+    const char* filepng = "output.png";
+    stbi_write_png(filepng, width, height, 4, imagepointer, width * 4);
 
     //LOG("Framebuffer image saved to %s\n", filename);
 
